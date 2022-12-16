@@ -2,6 +2,8 @@
 
 namespace HM\Nav_Menu_Cache;
 
+use WP_Term;
+
 const CACHE_KEY = 'hm-nav-menu-cache';
 
 /**
@@ -11,6 +13,10 @@ const CACHE_KEY = 'hm-nav-menu-cache';
  */
 function bootstrap() {
 	wp_cache_add_redis_hash_groups( CACHE_KEY );
+
+	// Get/Set menu cache.
+	add_filter( 'pre_wp_nav_menu', __NAMESPACE__ . '\\filter_nav_menu_before', 10, 2 );
+	add_filter( 'wp_nav_menu', __NAMESPACE__ . '\\filter_nav_menu_after', 10, 2 );
 
 	// Clear menu caches when a nav menu is updated.
 	add_action( 'wp_update_nav_menu', __NAMESPACE__ . '\\flush_menu_caches' );
@@ -57,4 +63,51 @@ function get_menu_cache_key( string $key ) {
  */
 function flush_menu_caches() : void {
 	wp_cache_delete_group( CACHE_KEY );
+}
+
+/**
+ * Filter WP Nav menu pre, to return cached menu if available.
+ *
+ * @param string|null $menu
+ * @param object $args
+ * @return string|null
+ */
+function filter_nav_menu_before( ?string $menu, object $args ) : ?string {
+	if ( ! empty( $args->theme_location ) ) {
+		$key = $args->theme_location;
+	} elseif ( ! empty( $args->menu ) ) {
+		$key = ( $args->menu instanceof WP_Term ) ? $args->menu->name : $args->menu;
+	}
+
+	if ( empty( $key ) ) {
+		return $menu;
+	}
+
+	$cache = get_cached_menu( $key );
+	if ( ! empty( $cache ) ) {
+		return $cache;
+	}
+
+	return $menu;
+}
+
+/**
+ * Filter WP Nav menu - post, to store rendered menu in cache.
+ *
+ * @param string|null $menu
+ * @param object $args
+ * @return string|null
+ */
+function filter_nav_menu_after( string $menu, object $args ) : string {
+	if ( ! empty( $args->theme_location ) ) {
+		$key = $args->theme_location;
+	} elseif ( ! empty( $args->menu ) ) {
+		$key = ( $args->menu instanceof WP_Term ) ? $args->menu->name : $args->menu;
+	}
+
+	if ( ! empty( $key ) ) {
+		set_cached_menu( $key, $menu );
+	}
+
+	return $menu;
 }
