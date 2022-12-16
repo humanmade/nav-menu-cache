@@ -1,0 +1,14 @@
+{
+    "name": "humanmade/nav-menu-cache",
+    "description": "WP Nav Menu Caching.",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0+",
+    "authors": [
+        {
+            "name": "Human Made",
+            "email": "hello@humanmade.com",
+            "homepage": "https://humanmade.com"
+        }
+    ],
+    "require": {}
+}
