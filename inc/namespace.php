@@ -14,6 +14,12 @@ function bootstrap() {
 
 	// Clear menu caches when a nav menu is updated.
 	add_action( 'wp_update_nav_menu', __NAMESPACE__ . '\\flush_menu_caches' );
+
+	// Clear menu caches when post or term is updated.
+	add_action( 'post_updated', __NAMESPACE__ . '\\post_updated' );
+	add_action( 'term_updated', __NAMESPACE__ . '\\term_updated' );
+	add_action( 'hm_nav_menu_cache_clear_cache_for_post', __NAMESPACE__ . '\\clear_menu_cache_for_post' );
+	add_action( 'hm_nav_menu_cache_clear_cache_for_term', __NAMESPACE__ . '\\clear_menu_cache_for_term' );
 }
 
 /**
@@ -57,4 +63,47 @@ function get_menu_cache_key( string $key ) {
  */
 function flush_menu_caches() : void {
 	wp_cache_delete_group( CACHE_KEY );
+}
+
+/**
+ * Handle clearing cache when a post is updated.
+ *
+ * This functionality is hooked in on a cron job,
+ * in case there are a lot of nav menus, or items.
+ *
+ * @param int $post_id Post ID.
+ * @return void
+ */
+function clear_menu_cache_for_post( int $post_id ) : void {
+	$nav_menus = wp_get_nav_menus();
+	foreach ( $nav_menus as $nav_menu ) {
+		$items = wp_get_nav_menu_items( $nav_menu );
+
+		foreach ( $items as $item ) {
+			if ( $item->type === 'post_type' && (int) $post_id === (int) $item->object_id ) {
+				flush_menu_caches();
+			}
+		}
+	}
+}
+
+/**
+ * Handle clearing cache when a term is updated.
+ *
+ * This functionality is hooked in on a cron job,
+ * in case there are a lot of nav menus, or items.
+ *
+ * @param int $term_id Term ID.
+ * @return void
+ */
+function clear_menu_cache_for_term( int $term_id ) : void {
+	$nav_menus = wp_get_nav_menus();
+	foreach ( $nav_menus as $nav_menu ) {
+		$items = wp_get_nav_menu_items( $nav_menu );
+		foreach ( $items as $item ) {
+			if ( $item->type === 'taxonomy' && $term_id === $item->object_id ) {
+				flush_menu_caches();
+			}
+		}
+	}
 }
