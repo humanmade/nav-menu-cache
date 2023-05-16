@@ -1,7 +1,7 @@
-DRAFT PLUGIN: WP Nav Menu Cache
+Draft Plugin: WP Nav Menu Cache
 ===============================
 
-**NOTE:** This plugin is currently a draft. Development is still in progress and has not been used in production. Contributions and feedback is very much welcome. 
+**NOTE:** This plugin is currently a draft. Development is still in progress and has not been used in production. Contributions and feedback are very much welcome. 
 
 Very large nav menus can impact performance of page load as they perform a significant number of calls to the object cache. However typically menus don't change frequently and are a good candidate to be cached. Caching menus isn't straight forwards of course, as we need to highlight the current page.
 
